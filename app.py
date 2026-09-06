@@ -167,10 +167,7 @@ section.main, section.main > div, section.main > div > div, [data-testid="stVert
 }
 
 /* Eradicate native buttons and residual pills completely */
-[data-testid="stFileUploader"] button,
-[data-testid="stFileUploaderDropzone"] button,
-[data-testid="baseButton-secondary"],
-button[kind="secondary"] {
+[data-testid="stFileUploader"] button {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
