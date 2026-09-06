@@ -1,5 +1,4 @@
-#core.py :
-
+#core.py
 import json
 import os
 from pathlib import Path
@@ -10,7 +9,7 @@ from pydantic import BaseModel
 load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-MODEL  = "openai/gpt-oss-120b"   # ← fixed from instructor's wrong model name
+MODEL  = "openai/gpt-oss-120b"
 
 
 # ── Pydantic Models ───────────────────────────────────────────────────────────
