@@ -4,6 +4,7 @@ import streamlit as st
 import tempfile
 import os
 import base64
+import time
 from pathlib import Path
 
 st.set_page_config(
@@ -165,8 +166,11 @@ section.main, section.main > div, section.main > div > div, [data-testid="stVert
     border-color: #43434b !important;
 }
 
-/* Strictly eradicate ONLY the buttons inside the Uploader */
-[data-testid="stFileUploader"] button {
+/* Eradicate native buttons and residual pills completely */
+[data-testid="stFileUploader"] button,
+[data-testid="stFileUploaderDropzone"] button,
+[data-testid="baseButton-secondary"],
+button[kind="secondary"] {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
@@ -361,10 +365,11 @@ st.markdown('<div class="hero-sub">OpenAI GPT-OSS-120B &nbsp;·&nbsp; Pydantic</
 col_l, col_r = st.columns(2, gap="large")
 
 with col_l:
-    st.markdown('<span class="s-label">&nbsp;Upload Resume</span>', unsafe_allow_html=True)
-    uploaded = st.file_uploader(
+    st.markdown('<span class="s-label">&nbsp;Upload Resume(s)</span>', unsafe_allow_html=True)
+    uploaded_files = st.file_uploader(
         "resume",
         type             = ["pdf", "docx"],
+        accept_multiple_files = True,
         label_visibility = "collapsed"
     )
 
@@ -384,79 +389,137 @@ with btn_col:
     go = st.button("Analyse Match⚡", use_container_width=True)
 
 
-# ── Analysis ──────────────────────────────────────────────────────────────────
+# ── Batch Analysis ────────────────────────────────────────────────────────────
 if go:
-    if not uploaded:
-        st.error("⚠️Please upload a resume (PDF or DOCX).")
+    if not uploaded_files:
+        st.error("⚠️Please upload at least one resume (PDF or DOCX).")
     elif not jd_text.strip():
         st.error("⚠️Please paste a job description.")
     else:
-        suffix   = Path(uploaded.name).suffix
-        tmp_path = None
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                tmp.write(uploaded.read())
-                tmp_path = tmp.name
-
-            with st.spinner("Reading uploaded file(s)...📖"):
-                raw_text = read_resume_file(tmp_path)
-            with st.spinner("Parsing resume content...⏳"):
-                resume = parse_resume(raw_text)
             with st.spinner("Analysing pasted job description...🔍"):
                 job = analyze_job(jd_text)
-            with st.spinner("Calculating match score...🧮"):
-                result = get_match_score(job, resume)
 
-            os.unlink(tmp_path); tmp_path = None
+            results = []
+
+            for idx, uploaded_file in enumerate(uploaded_files):
+                suffix   = Path(uploaded_file.name).suffix
+                tmp_path = None
+                try:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                        tmp.write(uploaded_file.read())
+                        tmp_path = tmp.name
+
+                    with st.spinner(f"[{idx+1}/{len(uploaded_files)}] Reading file: {uploaded_file.name}...📖"):
+                        raw_text = read_resume_file(tmp_path)
+                    
+                    with st.spinner(f"[{idx+1}/{len(uploaded_files)}] Parsing candidate profile...⏳"):
+                        resume = parse_resume(raw_text)
+                    
+                    time.sleep(5)
+                    
+                    with st.spinner(f"[{idx+1}/{len(uploaded_files)}] Calculating match score...🧮"):
+                        result = get_match_score(job, resume)
+                    
+                    time.sleep(5)
+                    
+                    results.append({
+                        "file_name": uploaded_file.name,
+                        "resume": resume,
+                        "score": float(result.score),
+                        "details": result.details
+                    })
+
+                finally:
+                    if tmp_path and os.path.exists(tmp_path):
+                        os.unlink(tmp_path)
+            
+            results.sort(key=lambda x: x["score"], reverse=True)
+
             st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-
-            d = result.details
-            score = float(result.score)
-            res_l, res_r = st.columns([1, 1.6], gap="large")
-
-            with res_l:
-                name    = d.get("candidate_name") or resume.name or "N/A"
-                email   = resume.email  or "N/A"
-                phone   = resume.phone  or "N/A"
-                exp_yrs = resume.total_experience_years
-                exp_met = d.get("experience_met", False)
+            
+            st.markdown('<span class="s-label">🏆 &nbsp;Candidate Leaderboard</span>', unsafe_allow_html=True)
+            leaderboard_html = """
+            <div class="glass-card" style="margin-bottom: 3rem;">
+                <table style="width: 100%; border-collapse: collapse; color: rgba(235, 215, 255, 0.85); font-size: 0.95rem;">
+                    <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.22); text-align: left;">
+                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Rank</th>
+                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Candidate</th>
+                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Experience</th>
+                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Score</th>
+                    </tr>
+            """
+            
+            for rank, res in enumerate(results, 1):
+                c_name = res["details"].get("candidate_name") or res["resume"].name or "Unknown Candidate"
+                exp_yrs = res["resume"].total_experience_years
+                exp_str = f"{exp_yrs} yrs" if exp_yrs is not None else "N/A"
+                score_val = res["score"]
+                score_color = "#34d399" if score_val >= 70 else "#f59e0b" if score_val >= 45 else "#f87171"
                 
-                rows_html = "".join([
-                    f'<div class="i-row"><span class="i-icon">{icon}</span>{text}</div>' for icon, text in [
-                        ("👤", name), ("📧", email), ("📱", phone),
-                        ("🕐", f"{exp_yrs} yr(s) experience" if exp_yrs else "Experience not specified"),
-                        ("✅" if exp_met else "❌", "Experience requirement met" if exp_met else "Experience requirement not met")
-                    ]
-                ])
+                leaderboard_html += f"""
+                    <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.08);">
+                        <td style="padding: 12px; font-weight: bold; color: rgba(230, 180, 255, 0.9);">#{rank}</td>
+                        <td style="padding: 12px; font-weight: 500; color: #fff;">{c_name}</td>
+                        <td style="padding: 12px;">{exp_str}</td>
+                        <td style="padding: 12px; font-weight: bold; color: {score_color};">{int(score_val)}%</td>
+                    </tr>
+                """
+            leaderboard_html += "</table></div>"
+            st.markdown(leaderboard_html, unsafe_allow_html=True)
 
-                st.markdown(f"""
-                <div class="glass-card">
-                    <span class="s-label">🎯 &nbsp;Match Score</span>
-                    {score_ring(score)}
-                    <br>
-                    {rows_html}
-                </div>
-                """, unsafe_allow_html=True)
+            for rank, res in enumerate(results, 1):
+                st.markdown(f'<span class="s-label">🏅 &nbsp;Rank #{rank} Detailed Breakdown</span>', unsafe_allow_html=True)
+                
+                d = res["details"]
+                score = res["score"]
+                resume = res["resume"]
+                
+                res_l, res_r = st.columns([1, 1.6], gap="large")
 
-            with res_r:
-                matching = d.get("matching_skills", [])
-                missing  = d.get("missing_skills",  [])
-                verdict  = d.get("verdict", "")
+                with res_l:
+                    name    = d.get("candidate_name") or resume.name or "N/A"
+                    email   = resume.email  or "N/A"
+                    phone   = resume.phone  or "N/A"
+                    exp_yrs = resume.total_experience_years
+                    exp_met = d.get("experience_met", False)
+                    
+                    rows_html = "".join([
+                        f'<div class="i-row"><span class="i-icon">{icon}</span>{text}</div>' for icon, text in [
+                            ("👤", name), ("📧", email), ("📱", phone),
+                            ("🕐", f"{exp_yrs} yr(s) experience" if exp_yrs is not None else "Experience not specified"),
+                            ("✅" if exp_met else "❌", "Experience requirement met" if exp_met else "Experience requirement not met")
+                        ]
+                    ])
 
-                match_sec = f"**Matching Skills**<br>{tags_html(matching, True)}" if matching else ""
-                miss_sec  = f"**Missing Skills**<br>{tags_html(missing, False)}" if missing else ""
-                verd_sec  = f'<div class="verdict">📋 &nbsp;{verdict}</div>' if verdict else ""
+                    st.markdown(f"""
+                    <div class="glass-card">
+                        <span class="s-label">🎯 &nbsp;Match Score</span>
+                        {score_ring(score)}
+                        <br>
+                        {rows_html}
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                st.markdown(f"""
-                <div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;">
-                    <span class="s-label">🧩 &nbsp;Skill Analysis</span>
-                    {match_sec}
-                    {miss_sec}
-                    {verd_sec}
-                </div>
-                """, unsafe_allow_html=True)
+                with res_r:
+                    matching = d.get("matching_skills", [])
+                    missing  = d.get("missing_skills",  [])
+                    verdict  = d.get("verdict", "")
+
+                    match_sec = f"**Matching Skills**<br>{tags_html(matching, True)}" if matching else ""
+                    miss_sec  = f"**Missing Skills**<br>{tags_html(missing, False)}" if missing else ""
+                    verd_sec  = f'<div class="verdict">📋 &nbsp;{verdict}</div>' if verdict else ""
+
+                    st.markdown(f"""
+                    <div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;">
+                        <span class="s-label">🧩 &nbsp;Skill Analysis</span>
+                        {match_sec}
+                        {miss_sec}
+                        {verd_sec}
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("<br><br>", unsafe_allow_html=True)
 
         except Exception as err:
-            if tmp_path and os.path.exists(tmp_path):
-                os.unlink(tmp_path)
             st.error(f"Something went wrong: {err}")
