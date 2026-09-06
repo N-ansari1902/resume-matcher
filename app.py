@@ -167,7 +167,10 @@ section.main, section.main > div, section.main > div > div, [data-testid="stVert
 }
 
 /* Eradicate native buttons and residual pills completely */
-[data-testid="stFileUploader"] button {
+[data-testid="stFileUploader"] button,
+[data-testid="stFileUploaderDropzone"] button,
+[data-testid="baseButton-secondary"],
+button[kind="secondary"] {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
@@ -215,7 +218,7 @@ section.main, section.main > div, section.main > div > div, [data-testid="stVert
 
 /* Clean text replacement */
 [data-testid="stFileUploaderDropzoneInstructions"] > div::before {
-    content: 'Drag & Drop or Click to upload file(s)' !important;
+    content: 'Drag/Drop or Click to upload files' !important;
     display: block !important;
     color: #ffffff !important;
     font-size: 1.05rem !important;
@@ -346,7 +349,8 @@ def score_ring(score: float) -> str:
     <text x="100" y="115" text-anchor="middle" font-size="10" fill="rgba(220,180,255,0.40)" font-family="Space Grotesk,sans-serif" letter-spacing="1.8">MATCH SCORE</text>
   </svg>
   <div style="color:{color};font-size:0.95rem;font-weight:600;letter-spacing:0.8px;margin-top:-0.2rem;">{label}</div>
-</div>"""
+</div>
+"""
 
 def tags_html(skills: list, ok: bool) -> str:
     icon, cls = ("✓", "ok") if ok else ("✗", "no")
@@ -436,16 +440,17 @@ if go:
             st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
             
             st.markdown('<span class="s-label">🏆 &nbsp;Candidate Leaderboard</span>', unsafe_allow_html=True)
+            
             leaderboard_html = """
-            <div class="glass-card" style="margin-bottom: 3rem;">
-                <table style="width: 100%; border-collapse: collapse; color: rgba(235, 215, 255, 0.85); font-size: 0.95rem;">
-                    <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.22); text-align: left;">
-                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Rank</th>
-                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Candidate</th>
-                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Experience</th>
-                        <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Score</th>
-                    </tr>
-            """
+<div class="glass-card" style="margin-bottom: 3rem;">
+    <table style="width: 100%; border-collapse: collapse; color: rgba(235, 215, 255, 0.85); font-size: 0.95rem;">
+        <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.22); text-align: left;">
+            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Rank</th>
+            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Candidate</th>
+            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Experience</th>
+            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Score</th>
+        </tr>
+"""
             
             for rank, res in enumerate(results, 1):
                 c_name = res["details"].get("candidate_name") or res["resume"].name or "Unknown Candidate"
@@ -455,18 +460,21 @@ if go:
                 score_color = "#34d399" if score_val >= 70 else "#f59e0b" if score_val >= 45 else "#f87171"
                 
                 leaderboard_html += f"""
-                    <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.08);">
-                        <td style="padding: 12px; font-weight: bold; color: rgba(230, 180, 255, 0.9);">#{rank}</td>
-                        <td style="padding: 12px; font-weight: 500; color: #fff;">{c_name}</td>
-                        <td style="padding: 12px;">{exp_str}</td>
-                        <td style="padding: 12px; font-weight: bold; color: {score_color};">{int(score_val)}%</td>
-                    </tr>
-                """
-            leaderboard_html += "</table></div>"
+        <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.08);">
+            <td style="padding: 12px; font-weight: bold; color: rgba(230, 180, 255, 0.9);">#{rank}</td>
+            <td style="padding: 12px; font-weight: 500; color: #fff;">{c_name}</td>
+            <td style="padding: 12px;">{exp_str}</td>
+            <td style="padding: 12px; font-weight: bold; color: {score_color};">{int(score_val)}%</td>
+        </tr>
+"""
+            leaderboard_html += """
+    </table>
+</div>
+"""
             st.markdown(leaderboard_html, unsafe_allow_html=True)
 
             for rank, res in enumerate(results, 1):
-                st.markdown(f'<span class="s-label">🏅 &nbsp;Rank #{rank} Detailed Breakdown</span>', unsafe_allow_html=True)
+                st.markdown(f'<span class="s-label" style="margin-top: 2rem;">🏅 &nbsp;Rank #{rank} Detailed Breakdown</span>', unsafe_allow_html=True)
                 
                 d = res["details"]
                 score = res["score"]
@@ -490,31 +498,31 @@ if go:
                     ])
 
                     st.markdown(f"""
-                    <div class="glass-card">
-                        <span class="s-label">🎯 &nbsp;Match Score</span>
-                        {score_ring(score)}
-                        <br>
-                        {rows_html}
-                    </div>
-                    """, unsafe_allow_html=True)
+<div class="glass-card">
+    <span class="s-label">🎯 &nbsp;Match Score</span>
+    {score_ring(score)}
+    <br>
+    {rows_html}
+</div>
+""", unsafe_allow_html=True)
 
                 with res_r:
                     matching = d.get("matching_skills", [])
                     missing  = d.get("missing_skills",  [])
                     verdict  = d.get("verdict", "")
 
-                    match_sec = f"**Matching Skills**<br>{tags_html(matching, True)}" if matching else ""
-                    miss_sec  = f"**Missing Skills**<br>{tags_html(missing, False)}" if missing else ""
+                    match_sec = f"<b style='color: rgba(240, 230, 255, 0.95);'>Matching Skills</b><br>{tags_html(matching, True)}" if matching else ""
+                    miss_sec  = f"<br><b style='color: rgba(240, 230, 255, 0.95);'>Missing Skills</b><br>{tags_html(missing, False)}" if missing else ""
                     verd_sec  = f'<div class="verdict">📋 &nbsp;{verdict}</div>' if verdict else ""
 
                     st.markdown(f"""
-                    <div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;">
-                        <span class="s-label">🧩 &nbsp;Skill Analysis</span>
-                        {match_sec}
-                        {miss_sec}
-                        {verd_sec}
-                    </div>
-                    """, unsafe_allow_html=True)
+<div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;">
+    <span class="s-label">🧩 &nbsp;Skill Analysis</span>
+    {match_sec}
+    {miss_sec}
+    {verd_sec}
+</div>
+""", unsafe_allow_html=True)
                 
                 st.markdown("<br><br>", unsafe_allow_html=True)
 
