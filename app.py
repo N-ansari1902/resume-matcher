@@ -180,6 +180,7 @@ section.main, section.main > div, section.main > div > div, [data-testid="stVert
     position: absolute !important;
     left: -9999px !important;
 }
+
 /* Kill default cloud icon */
 [data-testid="stFileUploaderDropzone"] svg {
     display: none !important;
@@ -326,6 +327,7 @@ observer.observe(window.parent.document.body, { childList: true, subtree: true }
 
 
 # ── Helper: SVG Score Ring ────────────────────────────────────────────────────
+# FLATTENED HTML to prevent Streamlit from applying Markdown formatting
 def score_ring(score: float) -> str:
     score = max(0.0, min(100.0, float(score)))
     R   = 78
@@ -334,19 +336,7 @@ def score_ring(score: float) -> str:
     if score >= 70: color, label = "#34d399", "Strong Match 🚀"
     elif score >= 45: color, label = "#f59e0b", "Moderate Match ⚡"
     else: color, label = "#f87171", "Weak Match ⚠️"
-    return f"""
-<div style="display:flex;flex-direction:column;align-items:center;padding:1rem 0 0.5rem;">
-  <svg width="215" height="215" viewBox="0 0 200 200">
-    <circle cx="100" cy="100" r="{R}" fill="none" stroke="rgba(200,130,255,0.15)" stroke-width="13"/>
-    <circle cx="100" cy="100" r="{R}" fill="none" stroke="{color}" stroke-width="13"
-            stroke-dasharray="{C:.2f}" stroke-dashoffset="{off:.2f}" stroke-linecap="round"
-            transform="rotate(-90 100 100)" style="filter:drop-shadow(0 0 12px {color}); transition:stroke-dashoffset 1.2s ease;"/>
-    <text x="100" y="93" text-anchor="middle" font-size="38" font-weight="700" fill="white" font-family="Space Grotesk,sans-serif">{int(score)}%</text>
-    <text x="100" y="115" text-anchor="middle" font-size="10" fill="rgba(220,180,255,0.40)" font-family="Space Grotesk,sans-serif" letter-spacing="1.8">MATCH SCORE</text>
-  </svg>
-  <div style="color:{color};font-size:0.95rem;font-weight:600;letter-spacing:0.8px;margin-top:-0.2rem;">{label}</div>
-</div>
-"""
+    return f'<div style="display:flex;flex-direction:column;align-items:center;padding:1rem 0 0.5rem;"><svg width="215" height="215" viewBox="0 0 200 200"><circle cx="100" cy="100" r="{R}" fill="none" stroke="rgba(200,130,255,0.15)" stroke-width="13"/><circle cx="100" cy="100" r="{R}" fill="none" stroke="{color}" stroke-width="13" stroke-dasharray="{C:.2f}" stroke-dashoffset="{off:.2f}" stroke-linecap="round" transform="rotate(-90 100 100)" style="filter:drop-shadow(0 0 12px {color}); transition:stroke-dashoffset 1.2s ease;"/><text x="100" y="93" text-anchor="middle" font-size="38" font-weight="700" fill="white" font-family="Space Grotesk,sans-serif">{int(score)}%</text><text x="100" y="115" text-anchor="middle" font-size="10" fill="rgba(220,180,255,0.40)" font-family="Space Grotesk,sans-serif" letter-spacing="1.8">MATCH SCORE</text></svg><div style="color:{color};font-size:0.95rem;font-weight:600;letter-spacing:0.8px;margin-top:-0.2rem;">{label}</div></div>'
 
 def tags_html(skills: list, ok: bool) -> str:
     icon, cls = ("✓", "ok") if ok else ("✗", "no")
@@ -437,16 +427,8 @@ if go:
             
             st.markdown('<span class="s-label">🏆 &nbsp;Candidate Leaderboard</span>', unsafe_allow_html=True)
             
-            leaderboard_html = """
-<div class="glass-card" style="margin-bottom: 3rem;">
-    <table style="width: 100%; border-collapse: collapse; color: rgba(235, 215, 255, 0.85); font-size: 0.95rem;">
-        <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.22); text-align: left;">
-            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Rank</th>
-            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Candidate</th>
-            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Experience</th>
-            <th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Score</th>
-        </tr>
-"""
+            # FLATTENED HTML to prevent Streamlit Markdown Code-Block interpretation
+            leaderboard_html = '<div class="glass-card" style="margin-bottom: 3rem;"><table style="width: 100%; border-collapse: collapse; color: rgba(235, 215, 255, 0.85); font-size: 0.95rem;"><tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.22); text-align: left;"><th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Rank</th><th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Candidate</th><th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Experience</th><th style="padding: 12px; color: rgba(230, 180, 255, 0.9); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem;">Score</th></tr>'
             
             for rank, res in enumerate(results, 1):
                 c_name = res["details"].get("candidate_name") or res["resume"].name or "Unknown Candidate"
@@ -455,18 +437,9 @@ if go:
                 score_val = res["score"]
                 score_color = "#34d399" if score_val >= 70 else "#f59e0b" if score_val >= 45 else "#f87171"
                 
-                leaderboard_html += f"""
-        <tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.08);">
-            <td style="padding: 12px; font-weight: bold; color: rgba(230, 180, 255, 0.9);">#{rank}</td>
-            <td style="padding: 12px; font-weight: 500; color: #fff;">{c_name}</td>
-            <td style="padding: 12px;">{exp_str}</td>
-            <td style="padding: 12px; font-weight: bold; color: {score_color};">{int(score_val)}%</td>
-        </tr>
-"""
-            leaderboard_html += """
-    </table>
-</div>
-"""
+                leaderboard_html += f'<tr style="border-bottom: 1px solid rgba(200, 130, 255, 0.08);"><td style="padding: 12px; font-weight: bold; color: rgba(230, 180, 255, 0.9);">#{rank}</td><td style="padding: 12px; font-weight: 500; color: #fff;">{c_name}</td><td style="padding: 12px;">{exp_str}</td><td style="padding: 12px; font-weight: bold; color: {score_color};">{int(score_val)}%</td></tr>'
+            
+            leaderboard_html += '</table></div>'
             st.markdown(leaderboard_html, unsafe_allow_html=True)
 
             for rank, res in enumerate(results, 1):
@@ -493,14 +466,9 @@ if go:
                         ]
                     ])
 
-                    st.markdown(f"""
-<div class="glass-card">
-    <span class="s-label">🎯 &nbsp;Match Score</span>
-    {score_ring(score)}
-    <br>
-    {rows_html}
-</div>
-""", unsafe_allow_html=True)
+                    # FLATTENED left card
+                    left_html = f'<div class="glass-card"><span class="s-label">🎯 &nbsp;Match Score</span>{score_ring(score)}<br>{rows_html}</div>'
+                    st.markdown(left_html, unsafe_allow_html=True)
 
                 with res_r:
                     matching = d.get("matching_skills", [])
@@ -511,14 +479,9 @@ if go:
                     miss_sec  = f"<br><b style='color: rgba(240, 230, 255, 0.95);'>Missing Skills</b><br>{tags_html(missing, False)}" if missing else ""
                     verd_sec  = f'<div class="verdict">📋 &nbsp;{verdict}</div>' if verdict else ""
 
-                    st.markdown(f"""
-<div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;">
-    <span class="s-label">🧩 &nbsp;Skill Analysis</span>
-    {match_sec}
-    {miss_sec}
-    {verd_sec}
-</div>
-""", unsafe_allow_html=True)
+                    # FLATTENED right card
+                    right_html = f'<div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;"><span class="s-label">🧩 &nbsp;Skill Analysis</span>{match_sec}{miss_sec}{verd_sec}</div>'
+                    st.markdown(right_html, unsafe_allow_html=True)
                 
                 st.markdown("<br><br>", unsafe_allow_html=True)
 
