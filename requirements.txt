@@ -1,0 +1,6 @@
+streamlit>=1.35.0
+groq
+pydantic>=2.0
+python-dotenv
+pypdf
+python-docx

@@ -1,0 +1,24 @@
+# Environment / secrets — NEVER push this to GitHub
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Mac clutter
+.DS_Store
+
+# Uploaded resume files (user data — keep private)
+resumes/
+*.pdf
+*.docx
+
+# Streamlit local secrets (use Streamlit Cloud's secrets panel instead)
+.streamlit/secrets.toml
+
+# Virtual environment
+venv/
+.venv/
+env/
