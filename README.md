@@ -1,4 +1,4 @@
-# 🎯 LLM-Based Profile Evaluator & Matcher
+# LLM-Based Profile Evaluator & Matcher
 
 Learning to build with LLMs — and I shipped something live.
 
@@ -8,7 +8,7 @@ Built with Groq's high-speed inference engine (`openai/gpt-oss-120b`), strict Py
 
 ---
 
-## 💡 What I Actually Learned Building It
+## What I Actually Learned Building It
 
 * **Structured outputs are easy. CONSISTENT structured outputs are the real work.**
   Initial tests showed scores fluctuating between runs on the same resume. Setting `temperature=0` helped stabilize the tokens, but prompt framing was the true bottleneck. Asking an LLM to arbitrarily "score a candidate from 0 to 100" creates inconsistent outputs[cite: 1]. The architecture works better when the model verifies factual criteria (individual skills, experience thresholds), while numerical aggregations and rankings are handled deterministically in code.
@@ -21,7 +21,7 @@ Built with Groq's high-speed inference engine (`openai/gpt-oss-120b`), strict Py
 
 ---
 
-## ✨ Features
+## Features
 
 * **Multi-Resume Batch Upload:** Supports concurrent upload of `.pdf` and `.docx` resumes.
 * **Automated Candidate Leaderboard:** Automatically ranks and sorts evaluated candidates by match percentage in a unified table.
@@ -32,7 +32,7 @@ Built with Groq's high-speed inference engine (`openai/gpt-oss-120b`), strict Py
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Tool / Library |
 | :--- | :--- |
@@ -44,7 +44,9 @@ Built with Groq's high-speed inference engine (`openai/gpt-oss-120b`), strict Py
 
 ---
 
-## 📸 Architecture Pipeline
+## Architecture Pipeline
+
+<img width="1024" height="1536" alt="architecture_flow" src="https://github.com/user-attachments/assets/43daadb6-df02-4831-9c65-2be8517e0946" />
 
 ```text
        Upload Multiple Resumes (PDF / DOCX)
