@@ -1,7 +1,5 @@
 # LLM-Based Profile Evaluator & Matcher
 
-Learning to build with LLMs — and I shipped something live.
-
 An automated AI resume screening application: paste a job description, upload a stack of candidate resumes, and get every profile parsed, evaluated, and ranked by match percentage — with detailed breakdowns of matched skills, missing criteria, and an automated recruiter verdict.
 
 Built with Groq's high-speed inference engine (`openai/gpt-oss-120b`), strict Pydantic v2 structured schemas, document parsers (`pypdf`, `python-docx`), and a custom-styled Streamlit frontend.
